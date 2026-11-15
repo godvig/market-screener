@@ -16,13 +16,24 @@ A stock screener built around **your own scorecards**. Rank a watchlist by what 
 
 ## Quick start
 
+You need [Node.js](https://nodejs.org) 20 or newer. Then:
+
+1. Download the repo (**Code → Download ZIP** and unpack it, or `git clone`).
+2. Run the start file in the folder: `./start.sh` on Linux and macOS, `start.bat` on Windows (double-click works too).
+
+The first run installs the dependencies and builds the app, which takes a minute. After that it starts the server and opens the app in your browser. If port 8787 is busy it takes the next free one, and starting it twice just opens the one already running. Your lists, scorecards and score history are kept in `data/` in the folder.
+
+On Linux, `./start.sh --shortcut` adds Market Screener to the application menu. On SteamOS, install Node without admin rights via [nvm](https://github.com/nvm-sh/nvm); `start.sh` prints the two commands if Node is missing.
+
+### Development
+
 ```bash
 npm install
 cp .env.example .env      # PROVIDER=yahoo works without a key
 npm run dev               # web on http://localhost:5173, API on :8787
 ```
 
-Run `npm run dev:mock` for offline demo data.
+Run `npm run dev:mock` for offline demo data. To use other ports: `PORT=8790 npm run dev -- --port 5180`.
 
 ### Static demo
 
@@ -68,7 +79,7 @@ To add a data source, implement `MarketProvider` in `server/providers/` and regi
 | `npm test` | Unit tests (analysis, scoring, import, store) |
 | `npm run typecheck` | TypeScript check |
 | `npm run lint` | Lint with oxlint |
-| `npm run build && npm start` | Production build served by the API on :8787 |
+| `npm start` | Same as `start.sh`: build if needed, serve everything on one port, open the browser |
 
 CI runs lint, typecheck, tests and both builds on every push and pull request.
 

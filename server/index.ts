@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import fs from "node:fs";
 import path from "node:path";
 import { computeMetrics, emptyMetrics } from "../shared/analysis";
 import { DEFAULT_IMPORT_MAX_AGE_DAYS, mergeImported, type Merged } from "../shared/importMerge";
@@ -107,8 +108,9 @@ async function fundamentals(symbol: string, q: Quote, imported: ImportedFigures 
 const app = express();
 app.use(express.json({ limit: "8mb" })); // imported key figures for a few thousand stocks fit
 
+// `app` lets the launcher tell a running Market Screener from another program on the same port.
 app.get("/api/health", (_req, res) => {
-  res.json({ provider: primary.name, fallback: fallback.name, baseCurrency: fx.base });
+  res.json({ app: "market-screener", provider: primary.name, fallback: fallback.name, baseCurrency: fx.base });
 });
 
 app.get("/api/store", async (_req, res) => {
@@ -211,7 +213,13 @@ app.get("/api/search", async (req, res) => {
 // In production, serve the built client too.
 const dist = path.resolve("dist");
 app.use(express.static(dist));
-app.get(/^\/(?!api).*/, (_req, res) => res.sendFile(path.join(dist, "index.html")));
+app.get(/^\/(?!api).*/, (_req, res) => {
+  if (fs.existsSync(path.join(dist, "index.html"))) return res.sendFile(path.join(dist, "index.html"));
+  res
+    .status(503)
+    .type("text/plain")
+    .send("The app has not been built yet. Run ./start.sh (or start.bat), or `npm run build`. In dev mode (`npm run dev`) the app is on http://localhost:5173.");
+});
 
 app.listen(PORT, () => {
   console.log(`API on http://localhost:${PORT}  (provider: ${primary.name}, fallback: ${fallback.name})`);

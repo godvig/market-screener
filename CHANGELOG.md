@@ -2,6 +2,13 @@
 
 Notable changes, newest first.
 
+## 2026-11-15 – One-step start
+
+- `start.sh` (Linux, macOS) and `start.bat` (Windows) install dependencies, build the app when the sources changed, start the server and open the browser. A busy port moves to the next free one; a second start opens the instance that is already running.
+- `./start.sh --shortcut` adds an application-menu entry on Linux.
+- `npm start` now runs the same launcher; the bare server is `npm run serve`.
+- Opening the server before the app is built explains what to do instead of failing with a missing-file error.
+
 ## 2026-11-14 – Score change column and a new look
 
 - **Score change column** (Δ 1M / 3M / 6M / 1Y): how the list's scorecard (or Sundhet) has moved, from the stored key figures; the tooltip names the figures that moved it. The period is set under *Columns*. New endpoint `GET /api/snapshots?symbols=…`.
