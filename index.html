@@ -13,10 +13,40 @@
       } catch (e) {}
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Market Screener</title>
+    <title>Market Screener – score stocks with your own scorecards</title>
+    <meta name="description" content="A free stock screener built around your own scorecards: rank a watchlist by quality, dividends or growth, see why each stock scores what it does and follow the score over time. Try the demo, no account needed." />
+    <link rel="canonical" href="https://screener.godvig.com/" />
+    <meta name="author" content="Adam Englund" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Market Screener" />
+    <meta property="og:url" content="https://screener.godvig.com/" />
+    <meta property="og:title" content="Market Screener – score stocks with your own rules" />
+    <meta property="og:description" content="Rank a watchlist by your own scorecards, see why each stock scores what it does and follow the score over time. Free and open source." />
+    <meta property="og:image" content="https://screener.godvig.com/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Market Screener: a watchlist ranked by a growth scorecard." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Market Screener",
+        "url": "https://screener.godvig.com/",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Any (web browser)",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "author": { "@type": "Person", "name": "Adam Englund", "url": "https://adamenglund.eu/" },
+        "codeRepository": "https://github.com/godvig/market-screener"
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <h1>Market Screener</h1>
+      <p>A stock screener built around your own scorecards. This demo needs JavaScript. The code is on <a href="https://github.com/godvig/market-screener">GitHub</a>.</p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

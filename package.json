@@ -1,7 +1,7 @@
 {
   "name": "market-screener",
   "version": "0.1.0",
-  "description": "Stock watchlist and analysis dashboard pulling free market-data APIs (Yahoo, Finnhub, FMP).",
+  "description": "Stock screener built around your own scorecards, with free market-data APIs (Yahoo, Finnhub, FMP) or your own CSV/Börsdata export.",
   "scripts": {
     "dev": "concurrently -k -n api,web -c blue,green \"tsx watch server/index.ts\" \"vite\"",
     "dev:mock": "cross-env PROVIDER=mock npm run dev",
