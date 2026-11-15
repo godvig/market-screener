@@ -2,6 +2,10 @@
 
 Notable changes, newest first.
 
+## 2026-11-15 – Visit counting on the demo
+
+- The hosted demo counts page loads anonymously with GoatCounter, to see whether anyone finds it and from where. One request per load, no cookies, no third-party script; list names and stock symbols are never sent. A local install or a fork sends nothing, and neither does a browser with Do Not Track or Global Privacy Control on.
+
 ## 2026-11-14 – Score change column and a new look
 
 - **Score change column** (Δ 1M / 3M / 6M / 1Y): how the list's scorecard (or Sundhet) has moved, from the stored key figures; the tooltip names the figures that moved it. The period is set under *Columns*. New endpoint `GET /api/snapshots?symbols=…`.
