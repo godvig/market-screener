@@ -49,7 +49,8 @@ export const yahooProvider: MarketProvider = {
 
   /**
    * Three calls, each allowed to fail on its own: key statistics, annual
-   * statements (growth, equity ratio) and dividend history.
+   * statements (growth, equity ratio) and dividend history. Annual statements are
+   * asked for 12 years back so 5- and 10-year growth can be computed when Yahoo has them.
    */
   async getFundamentals(symbol: string): Promise<Fundamentals> {
     const noValidate = { validateResult: false } as const;
@@ -58,7 +59,7 @@ export const yahooProvider: MarketProvider = {
         .quoteSummary(symbol, { modules: ["summaryDetail", "defaultKeyStatistics", "financialData"] }, noValidate)
         .catch(() => null),
       yf
-        .fundamentalsTimeSeries(symbol, { period1: new Date(Date.now() - 6 * 366 * 86_400_000), type: "annual", module: "all" }, noValidate)
+        .fundamentalsTimeSeries(symbol, { period1: new Date(Date.now() - 12 * 366 * 86_400_000), type: "annual", module: "all" }, noValidate)
         .catch(() => null),
       yf.chart(symbol, { period1: "1995-01-01", interval: "1mo", events: "div" }, noValidate).catch(() => null),
     ]);
