@@ -40,6 +40,14 @@ The interface is in English, but the scorecards keep the Swedish names they had 
 | **Tillväxt** / **Tillväxt (graderad)** | Growth / graded growth | Five growth series over 1–10 years; the graded one subtracts points for shrinking. |
 | **Egen bedömning** | Own assessment | Your 0–3 ratings of outlook, management, insiders and more. |
 
+### Core scorecards and trebles
+
+*Sundhet*, *Kvalitet & värdering* and *Utdelning* are the core scorecards: they are the score columns you see by default, they head the *Rank by* menu and the sidebar, and the stock page shows them next to the list's own. They were picked because Yahoo's free data fills most of them (95, 100 and 75 % of the points), they overlap little (the other presets largely repeat them, see below), and they lean on what research links most to later returns: profitability and cash flow, valuation, and dividend discipline. Past growth, which the *Tillväxt* cards score, has a much weaker link.
+
+A **treble** is a stock that is green (67 or more) on all three, each with enough data behind it; thin or missing data never counts as green. A company that pays no dividend (a yield of zero or none reported) is judged on *Sundhet* and *Kvalitet & värdering* alone, so a reinvesting compounder can make it too. Trebles get a brass marker and stripe in the table, a ribbon on the stock page, and a filter button above the table. It is a shortlist for a closer look, not a buy signal on its own. Note that *Kvalitet & värdering* rewards a low payout and *Utdelning* a high yield, so a dividend-paying treble is usually a profitable, fairly valued company with a moderate, well-covered dividend.
+
+The core set lives in `CORE_SCORECARD_IDS` in [`shared/scoring.ts`](shared/scoring.ts). Overlap between the presets: *Tillväxt* and *Tillväxt (graderad)* share 89 % of their points' metrics, *Kvalitet & värdering* and *Key Metrics* 80 %, *Sundhet* and *Sundhet (AI-vikter)* 74 %, and *Utdelningspoäng (tillväxt)* is a subset of *Utdelning*.
+
 Defined in [`shared/scoring.ts`](shared/scoring.ts) as data (criteria → tiers → points), so new models are a few lines. The presets start from the original spreadsheet formulas. Tests in `shared/scoring.test.ts` check them against the spreadsheet's results for a real row, using the "exactly like Excel" settings (`EXCEL_SCORING`); where the app deliberately scores differently (listed below), the test says by how much and why.
 
 ### Your own scorecards

@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from "react";
 import type { WatchlistRow } from "../../shared/types";
-import { TREND_COL, columnCoverage, customOf, metaOf, moveColumn, visibleColumns, type Ctx } from "../columns";
+import { TREND_COL, columnCoverage, coreNames, customOf, isTreble, metaOf, moveColumn, visibleColumns, type Ctx } from "../columns";
 import { HorseIcon } from "./HorseIcon";
 
 const col = createColumnHelper<WatchlistRow>();
@@ -49,6 +49,10 @@ export function WatchlistTable({ rows, ctx, columnIds, onColumns, toolbar, progr
   // Picking another lens (or opening another list) re-ranks by it.
   useEffect(() => setSorting(lensCol ? [{ id: lensCol, desc: true }] : []), [lensCol]);
   const [filter, setFilter] = useState("");
+  const [onlyTrebles, setOnlyTrebles] = useState(false);
+  /** Rows green on all three core scorecards. */
+  const trebles = useMemo(() => new Set(rows.filter((r) => isTreble(r, ctx)).map((r) => r.quote.symbol)), [rows, ctx]);
+  const trebleTitle = `Treble: green on ${coreNames(ctx)}, each with enough data (a company that pays no dividend is judged without Utdelning). A starting point for a closer look, not a buy signal on its own.`;
   const [dragId, setDragId] = useState<string | null>(null);
   const [drop, setDrop] = useState<{ id: string; after: boolean } | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -141,6 +145,11 @@ export function WatchlistTable({ rows, ctx, columnIds, onColumns, toolbar, progr
           return (
             <>
               <strong>{c.getValue()}</strong>
+              {trebles.has(r.quote.symbol) && (
+                <span className="treble-mark" title={trebleTitle} aria-label="Treble">
+                  <TrebleIcon />
+                </span>
+              )}
               {/* Phones hide the Name column and show the name here instead. */}
               <span className={`sym-name${r.error ? " err" : ""}`}>
                 {r.error ? (
@@ -218,11 +227,11 @@ export function WatchlistTable({ rows, ctx, columnIds, onColumns, toolbar, progr
         ),
       }),
     ],
-    [defs, ctx, firstExtra, coverage, onRemove, onFix, lensCol],
+    [defs, ctx, firstExtra, coverage, onRemove, onFix, lensCol, trebles, trebleTitle],
   );
 
   const table = useReactTable({
-    data: rows,
+    data: onlyTrebles ? rows.filter((r) => trebles.has(r.quote.symbol)) : rows,
     columns,
     state: { sorting, globalFilter: filter },
     onSortingChange: setSorting,
@@ -244,6 +253,16 @@ export function WatchlistTable({ rows, ctx, columnIds, onColumns, toolbar, progr
         <span className="muted">
           {table.getRowModel().rows.length} of {rows.length}
         </span>
+        <button
+          className={`treble-filter${onlyTrebles ? " active" : ""}`}
+          aria-pressed={onlyTrebles}
+          disabled={!trebles.size && !onlyTrebles}
+          onClick={() => setOnlyTrebles((v) => !v)}
+          title={trebles.size ? trebleTitle : `No treble in this list: none is green on ${coreNames(ctx)}.`}
+        >
+          <TrebleIcon />
+          {trebles.size} {trebles.size === 1 ? "treble" : "trebles"}
+        </button>
         {progress && <span className="progress">{progress}</span>}
         <div className="spacer" />
         {toolbar}
@@ -293,7 +312,7 @@ export function WatchlistTable({ rows, ctx, columnIds, onColumns, toolbar, progr
           </thead>
           <tbody>
             {table.getRowModel().rows.map((r) => (
-              <tr key={r.id} onClick={() => onOpen(r.original.quote.symbol)}>
+              <tr key={r.id} className={trebles.has(r.original.quote.symbol) ? "treble" : undefined} onClick={() => onOpen(r.original.quote.symbol)}>
                 {r.getVisibleCells().map((c) => {
                   const meta = c.column.columnDef.meta as ColMeta | undefined;
                   const locked = LOCKED.has(c.column.id) ? `locked locked-${c.column.id}` : "";
@@ -309,5 +328,16 @@ export function WatchlistTable({ rows, ctx, columnIds, onColumns, toolbar, progr
         </table>
       </div>
     </div>
+  );
+}
+
+/** Three overlapping rings: a treble, three winners on one card. */
+export function TrebleIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden="true" className="treble-icon">
+      <circle cx="5" cy="10" r="3.4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="11" cy="10" r="3.4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="8" cy="5" r="3.4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
   );
 }

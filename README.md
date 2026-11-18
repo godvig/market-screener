@@ -42,11 +42,13 @@ Run `npm run dev:mock` for offline demo data. To use other ports: `PORT=8790 npm
 ## Features
 
 - **Your own scorecards.** Nine presets from the original spreadsheets, or build your own: change criteria, thresholds, points and weights and watch the list re-rank live. Share a scorecard as a JSON file
+- **Trebles.** Three core scorecards (*Sundhet*, *Kvalitet & värdering* and *Utdelning*) are shown by default. A stock that is green on all three, each with enough data behind it (without *Utdelning* for a company that pays no dividend), is marked as a *treble* and can be filtered on: a shortlist for a closer look. The other presets are a click away in the sidebar
 - **Why this score.** Every score is broken down per criterion and compared with the rest of the list: what lifts a stock above a typical one and what pulls it down
 - **Score history.** Key figures are saved over time, so any scorecard, even one you built today, can be scored back in time
 - **Bring your own data.** Free APIs (Yahoo, Finnhub, FMP) or a CSV/Excel export, for example from Börsdata, with columns recognised in Swedish and English
 - **A proper table.** Sortable and filterable, with traffic lights, a column picker, data coverage per column and prices in both the listing currency and SEK
-- **Stock page.** Candlestick chart with SMA50/SMA200 and every key figure
+- **Stock page.** Candlestick chart with SMA50/SMA200, and every key figure in folding groups that mark the ones the score uses
+- **Keyboard shortcuts.** R rename, C copy, E export, I import and D delete a list
 - **Private by design.** Lists, notes and imported figures stay on your machine; API keys never reach the browser
 - **Works on your phone,** in light and dark
 

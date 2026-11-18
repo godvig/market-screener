@@ -1,4 +1,5 @@
 import { useState, type DragEvent } from "react";
+import { CORE_SCORECARD_IDS, type Scorecard } from "../../shared/scoring";
 import type { ListGroup, UserStore, Watchlist } from "../../shared/types";
 import type { StoreApi } from "../useStore";
 
@@ -9,7 +10,14 @@ interface Props {
   onOpenList: (id: string) => void;
   scorecardsOpen?: boolean;
   onOpenScorecards: () => void;
+  /** Every scorecard: the core ones are listed first, the rest under "More scorecards". */
+  scorecards: Scorecard[];
+  /** The scorecard open in the editor, if any. */
+  activeScorecard?: string;
+  onOpenScorecard: (id: string) => void;
 }
+
+const CORE = new Set<string>(CORE_SCORECARD_IDS);
 
 type Drag = { kind: "list" | "group"; id: string } | null;
 type DropTarget = { kind: "beforeList" | "intoGroup" | "beforeGroup"; id: string } | null;
@@ -21,7 +29,7 @@ const UNCATEGORISED = "__none__";
  * list (to place it before) or onto a category (to put it last in it);
  * drag a category header to reorder categories. Double-click to rename.
  */
-export function Sidebar({ store, api, activeListId, onOpenList, scorecardsOpen, onOpenScorecards }: Props) {
+export function Sidebar({ store, api, activeListId, onOpenList, scorecardsOpen, onOpenScorecards, scorecards, activeScorecard, onOpenScorecard }: Props) {
   const [drag, setDrag] = useState<Drag>(null);
   const [over, setOver] = useState<DropTarget>(null);
   const [editing, setEditing] = useState<{ kind: "list" | "group"; id: string } | null>(null);
@@ -215,10 +223,37 @@ export function Sidebar({ store, api, activeListId, onOpenList, scorecardsOpen, 
         {store.groups.map(renderGroup)}
         {renderGroup(null)}
       </nav>
-      <button className={`side-link${scorecardsOpen ? " active" : ""}`} onClick={onOpenScorecards}>
-        Scorecards
-        <small>build and tune your own</small>
-      </button>
+      <section className="side-cards" aria-label="Scorecards">
+        <button className={`side-link${scorecardsOpen && !activeScorecard ? " active" : ""}`} onClick={onOpenScorecards}>
+          Scorecards
+          <small>build and tune your own</small>
+        </button>
+        <ul>
+          {scorecards
+            .filter((c) => CORE.has(c.id))
+            .map((c) => (
+              <li key={c.id}>
+                <button className={`side-card core${activeScorecard === c.id ? " active" : ""}`} onClick={() => onOpenScorecard(c.id)}>
+                  {c.name}
+                </button>
+              </li>
+            ))}
+        </ul>
+        <details className="side-more" open={!!activeScorecard && !CORE.has(activeScorecard)}>
+          <summary>More scorecards ({scorecards.filter((c) => !CORE.has(c.id)).length})</summary>
+          <ul>
+            {scorecards
+              .filter((c) => !CORE.has(c.id))
+              .map((c) => (
+                <li key={c.id}>
+                  <button className={`side-card${activeScorecard === c.id ? " active" : ""}`} onClick={() => onOpenScorecard(c.id)}>
+                    {c.name}
+                  </button>
+                </li>
+              ))}
+          </ul>
+        </details>
+      </section>
       <div className="side-actions">
         <button
           onClick={() => {

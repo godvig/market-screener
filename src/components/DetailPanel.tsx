@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { scoreBand, score } from "../../shared/scoring";
 import type { Candle, HistoryRange, StockMeta, WatchlistRow } from "../../shared/types";
 import { api } from "../api";
-import { COLUMNS, metaOf, sourceOf, type Ctx } from "../columns";
+import { COLUMNS, TREND_COL, coreCards, coreNames, isTreble, metaOf, sourceOf, type Ctx } from "../columns";
 import { fmtBig, fmtNum, fmtPct, sameCurrency, toBase, tone } from "../format";
 import { HorseIcon } from "./HorseIcon";
 import { PriceChart } from "./PriceChart";
 import { ScorePanel } from "./ScorePanel";
 import { StockInfo } from "./StockInfo";
+import { TrebleIcon } from "./WatchlistTable";
+import { paysDividend } from "../../shared/scoring";
 import { WhyPanel } from "./WhyPanel";
 
 const RANGES: HistoryRange[] = ["6mo", "1y", "2y", "5y"];
@@ -89,17 +91,22 @@ export function DetailPanel({ row, ctx, listName, peers, lensId, prev, next, onB
   ];
 
   // Key figures grouped like the column picker, only those with a value.
-  const metricCols = COLUMNS.filter((c) => c.id !== "mktcap" && !c.id.startsWith("score.") && !c.id.startsWith("info.") && c.section !== "Own assessments")
+  const metricCols = COLUMNS.filter(
+    (c) => c.id !== "mktcap" && c.id !== TREND_COL && !c.id.startsWith("score.") && !c.id.startsWith("info.") && c.section !== "Own assessments",
+  )
     .filter((c) => c.tier === "extra" || c.id === "volatility" || c.id === "sharpe")
     .filter((c) => c.value(row, ctx) != null);
   const sections = [...new Set(metricCols.map((c) => c.section))];
 
-  // The list's lens first, then the usual presets.
+  // The list's lens first, then the core scorecards.
   const lens = ctx.scorecards.find((c) => c.id === lensId);
+  /** Figures the list's scorecard (or Sundhet) scores on are marked in the folded groups below. */
+  const scored = new Set<string>((lens ?? ctx.scorecards[0])?.criteria.map((c) => c.metric) ?? []);
   const miniCards = [
     ...(lens ? [lens] : []),
-    ...ctx.scorecards.filter((c) => c.id !== lens?.id && ["sundhet", "keyMetrics", "dividend", "quality"].includes(c.id)),
+    ...coreCards(ctx).filter((c) => c.id !== lens?.id),
   ].slice(0, 4);
+  const isTrebleStock = isTreble(row, ctx);
 
   return (
     <div className="stock-view">
@@ -142,6 +149,15 @@ export function DetailPanel({ row, ctx, listName, peers, lensId, prev, next, onB
             )}
             {q.source && <div className="muted small">Source: {q.source}</div>}
           </div>
+          {isTrebleStock && (
+            <p className="treble-ribbon" title="A starting point for a closer look, not a buy signal on its own.">
+              <TrebleIcon size={16} />
+              <span>
+                <strong>Treble</strong> · green on{" "}
+                {paysDividend(sourceOf(row, ctx)) ? coreNames(ctx) : `${coreNames(ctx, coreCards(ctx).filter((c) => c.id !== "dividend"))} (no dividend paid)`}
+              </span>
+            </p>
+          )}
           <div className="mini-scores">
             {miniCards.map((c) => {
               const s = score(c, sourceOf(row, ctx), ctx.scoring);
@@ -196,21 +212,24 @@ export function DetailPanel({ row, ctx, listName, peers, lensId, prev, next, onB
                 </div>
               ))}
             </dl>
-            {sections.map((sec) => (
-              <div key={sec}>
-                <h3>{sec}</h3>
-                <dl className="stats">
-                  {metricCols
-                    .filter((c) => c.section === sec)
-                    .map((c) => (
-                      <div key={c.id} title={c.title}>
-                        <dt>{c.label}</dt>
-                        <dd>{c.render ? c.render(row, ctx) : String(c.value(row, ctx))}</dd>
-                      </div>
-                    ))}
-                </dl>
-              </div>
-            ))}
+            <div className="figure-groups">
+              {sections.map((sec) => {
+                const cols = metricCols.filter((c) => c.section === sec);
+                const used = cols.filter((c) => scored.has(c.id)).length;
+                return (
+                  <FigureGroup key={sec} title={sec} summary={`${cols.length} figures${used ? ` · ${used} in the score` : ""}`}>
+                    <dl className="stats">
+                      {cols.map((c) => (
+                        <div key={c.id} title={c.title} className={scored.has(c.id) ? "in-score" : undefined}>
+                          <dt>{c.label}</dt>
+                          <dd>{c.render ? c.render(row, ctx) : String(c.value(row, ctx))}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </FigureGroup>
+                );
+              })}
+            </div>
           </>
         )}
 
@@ -224,5 +243,40 @@ export function DetailPanel({ row, ctx, listName, peers, lensId, prev, next, onB
           />}
       </div>
     </div>
+  );
+}
+
+/** A foldable group of key figures, folded until opened. Whether it is open is remembered per group in this browser. */
+function FigureGroup({ title, summary, children }: { title: string; summary: string; children: ReactNode }) {
+  const storeKey = `market-screener.figures.${title}`;
+  const [open, setOpen] = useState(() => {
+    try {
+      const saved = localStorage.getItem(storeKey);
+      return saved === "1";
+    } catch {
+      return false;
+    }
+  });
+  return (
+    <details
+      className="figure-group"
+      open={open}
+      onToggle={(e) => {
+        const next = (e.currentTarget as HTMLDetailsElement).open;
+        if (next === open) return;
+        setOpen(next);
+        try {
+          localStorage.setItem(storeKey, next ? "1" : "0");
+        } catch {
+          // Storage can be unavailable (private mode); the group just won't remember.
+        }
+      }}
+    >
+      <summary>
+        <span className="fg-title">{title}</span>
+        <span className="muted">{summary}</span>
+      </summary>
+      {children}
+    </details>
   );
 }

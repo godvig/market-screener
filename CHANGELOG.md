@@ -2,6 +2,15 @@
 
 Notable changes, newest first.
 
+## 2026-11-18 – Core scorecards, trebles and a tidier stock page
+
+- **Core scorecards**: *Sundhet*, *Kvalitet & värdering* and *Utdelning* are the default score columns, head the *Rank by* menu and the stock page, and are listed in the sidebar. The other presets sit under *More scorecards*. Saved column choices are kept; *Columns → Reset to default* switches to the new set.
+- **Trebles**: green on all three core scorecards, each with enough data; a company without a dividend is judged on the other two. Marked in the table and on the stock page, with a filter button.
+- **List menu with shortcuts**: Import stays as a button; rename (R), copy (C), export (E), import (I) and delete (D) are in a ⋯ menu and on the keyboard.
+- **Stock page**: key figures in folded groups, with the figures the score uses marked.
+- **Demo data**: dividend, yield and payout agree; prices sit near realistic levels; key figures follow a quality factor, as in real markets.
+- Yahoo is asked for 12 years of annual statements, so 5- and 10-year earnings growth fills in where Yahoo has the years.
+
 ## 2026-11-15 – One-step start
 
 - `start.sh` (Linux, macOS) and `start.bat` (Windows) install dependencies, build the app when the sources changed, start the server and open the browser. A busy port moves to the next free one; a second start opens the instance that is already running.

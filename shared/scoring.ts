@@ -482,5 +482,33 @@ export const SCORECARDS: Scorecard[] = [
 
 export const SCORECARD_BY_ID = new Map(SCORECARDS.map((s) => [s.id, s]));
 
+/**
+ * The core scorecards: shown by default, and together they make the "treble".
+ * Chosen for good data coverage, little overlap with each other, and the
+ * strongest link to later returns (quality, value, dividend discipline).
+ * The other presets stay available from the sidebar and the column picker.
+ */
+export const CORE_SCORECARD_IDS = ["sundhet", "quality", "dividend"] as const;
+
 /** Colour band for a 0–100 score. */
 export const scoreBand = (pct: number | null) => (pct == null ? null : pct >= 67 ? "good" : pct >= 34 ? "ok" : "bad");
+
+/** Scorecards about the dividend: skipped in a treble for a company that pays none. */
+const DIVIDEND_CARDS = new Set(["dividend", "divGrowth"]);
+
+/** False when the company pays no dividend (a yield of zero, or none reported). */
+export const paysDividend = (source: MetricSource): boolean => (metricValue(source, "dividendYield") ?? 0) > 0;
+
+/**
+ * A "treble": the stock scores green on every given scorecard, each with
+ * enough data behind it. Missing or thin data never counts as green.
+ * A company that pays no dividend is judged on the other scorecards alone,
+ * so a reinvesting compounder can still make it.
+ */
+export function treble(cards: Scorecard[], source: MetricSource, opts?: ScoreOptions): boolean {
+  const judged = paysDividend(source) ? cards : cards.filter((c) => !DIVIDEND_CARDS.has(c.id));
+  return judged.length > 0 && judged.every((card) => {
+    const s = score(card, source, opts);
+    return s.sufficient && scoreBand(s.pct) === "good";
+  });
+}

@@ -48,7 +48,7 @@ const DEMO_STORE: UserStore = {
   lists: [
     { id: "demo-large", name: "Large caps", groupId: "demo-se", symbols: ["VOLV-B.ST", "ERIC-B.ST", "INVE-B.ST", "ATCO-A.ST", "SAND.ST", "HM-B.ST"], scorecardId: "sundhet" },
     { id: "demo-div", name: "Dividend ideas", groupId: "demo-se", symbols: ["SHB-A.ST", "SEB-A.ST", "TELIA.ST", "AZN.ST"], scorecardId: "dividend" },
-    { id: "demo-tech", name: "Big tech", groupId: "demo-us", symbols: ["AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META"], scorecardId: "growth" },
+    { id: "demo-tech", name: "Big tech", groupId: "demo-us", symbols: ["AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META"], scorecardId: "quality" },
     { id: "demo-etf", name: "ETFs", groupId: "demo-us", symbols: ["SPY", "QQQ", "VT"] },
     { id: "demo-eu", name: "Europe", symbols: ["ASML.AS", "NOVO-B.CO", "SAP.DE", "NESN.SW"], scorecardId: "custom-compounders" },
   ],

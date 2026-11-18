@@ -2,7 +2,7 @@
 // (Microsoft row, sheet "Utd.poäng & Sundhetspoäng").
 import { describe, expect, it } from "vitest";
 import { emptyMetrics } from "./analysis";
-import { SCORECARD_BY_ID, score, scoreCriterion, type Criterion } from "./scoring";
+import { CORE_SCORECARD_IDS, SCORECARD_BY_ID, paysDividend, score, scoreBand, scoreCriterion, treble, type Criterion } from "./scoring";
 import type { Fundamentals, Metrics } from "./types";
 
 // Spreadsheet fractions converted to percent.
@@ -211,5 +211,37 @@ describe("metric fixes", () => {
     const r = score(card("sundhet"), src({ fcfMargin: 12, roic: 11, netDebtEbitda: -0.5 }), EXCEL);
     const pts = Object.fromEntries(r.details.filter((d) => d.points != null).map((d) => [d.criterion.id, d.points]));
     expect(pts).toEqual({ fcf: 2, roic: 4 / 3, nde: 2 });
+  });
+});
+
+describe("treble", () => {
+  const core = CORE_SCORECARD_IDS.map(card);
+
+  it("needs green on every core scorecard", () => {
+    const bands = core.map((c) => scoreBand(score(c, src(msft)).pct));
+    expect(treble(core, src(msft))).toBe(bands.every((b) => b === "good"));
+  });
+
+  it("is never given on missing data", () => {
+    expect(treble(core, src({}))).toBe(false);
+    expect(treble([], src(msft))).toBe(false);
+  });
+
+  it("judges a company without a dividend on the other scorecards alone", () => {
+    const strong: Fundamentals = { ...msft, pe: 12, pb: 2, peg: 0.8, roe: 30, dividendYield: 3, payoutRatio: 40 };
+    const noDividend: Fundamentals = { ...strong, dividendYield: 0, payoutRatio: 0 };
+    expect(paysDividend(src(noDividend))).toBe(false);
+    expect(treble([card("quality"), card("dividend")], src(noDividend))).toBe(treble([card("quality")], src(noDividend)));
+    // A payer still needs the dividend card to be green.
+    expect(treble([card("quality"), card("dividend")], src(strong))).toBe(
+      treble([card("quality")], src(strong)) && scoreBand(score(card("dividend"), src(strong)).pct) === "good",
+    );
+  });
+
+  it("drops out when one scorecard turns amber", () => {
+    const strong: Fundamentals = { ...msft, pe: 12, pb: 2, peg: 0.8, roe: 30, dividendYield: 3, payoutRatio: 40 };
+    const weak: Fundamentals = { ...strong, roe: 2, profitMargin: 2, fcfMargin: 1 };
+    expect(treble([card("quality")], src(strong))).toBe(true);
+    expect(treble([card("quality")], src(weak))).toBe(false);
   });
 });

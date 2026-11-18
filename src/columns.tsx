@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { MANUAL_LEVELS, METRIC_BY_KEY, metricValue, rate, type ManualKey, type MetricKey, type Rating } from "../shared/metrics";
 import { isImportSource } from "../shared/importMerge";
-import { SCORECARDS, score, scoreBand, type ScoreOptions, type Scorecard } from "../shared/scoring";
+import { CORE_SCORECARD_IDS, SCORECARDS, score, scoreBand, treble, type ScoreOptions, type Scorecard } from "../shared/scoring";
 import type { FundamentalKey, StockMeta, WatchlistRow } from "../shared/types";
 import { HorseIcon, investmentRank } from "./components/HorseIcon";
 import { explainChange, snapshotBefore, type Snapshot } from "../shared/scoreHistory";
@@ -157,6 +157,19 @@ export function ScoreBadge({ card, r, ctx }: { card: Scorecard; r: WatchlistRow;
   );
 }
 
+/** The core scorecards as the user has them (presets may carry their own weights). */
+export const coreCards = (ctx: Ctx): Scorecard[] =>
+  CORE_SCORECARD_IDS.flatMap((id) => ctx.scorecards.find((c) => c.id === id) ?? []);
+
+/** Green on all three core scorecards, each with enough data. */
+export const isTreble = (r: WatchlistRow, ctx: Ctx): boolean => !r.error && treble(coreCards(ctx), sourceOf(r, ctx), ctx.scoring);
+
+/** Names of the core scorecards for a sentence: "Sundhet, Kvalitet & värdering and Utdelning". */
+export const coreNames = (ctx: Ctx, cards = coreCards(ctx)): string => {
+  const names = cards.map((c) => c.name);
+  return names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}` : (names[0] ?? "");
+};
+
 const scoreCol = (card: Scorecard, defaultOn: boolean): ColumnDef => ({
   id: `score.${card.id}`,
   label: card.name,
@@ -231,7 +244,7 @@ const trendCol: ColumnDef = {
   },
 };
 
-const DEFAULT_SCORES = new Set(["sundhet", "keyMetrics", "dividend"]);
+const DEFAULT_SCORES = new Set<string>(CORE_SCORECARD_IDS);
 
 const BEFORE_SCORES: ColumnDef[] = [
   // ---- standard ----

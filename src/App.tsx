@@ -170,6 +170,12 @@ export function App() {
           go(list.id, undefined, false, list.scorecardId ?? "");
           setMenuOpen(false);
         }}
+        scorecards={ctx.scorecards}
+        activeScorecard={route.scorecard || undefined}
+        onOpenScorecard={(id) => {
+          go(list.id, undefined, false, id);
+          setMenuOpen(false);
+        }}
       />
       {menuOpen && <div className="drawer-backdrop" onClick={() => setMenuOpen(false)} aria-hidden="true" />}
 

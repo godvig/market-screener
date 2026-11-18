@@ -1,5 +1,5 @@
 import { isCustomId } from "../../shared/scorecardIO";
-import type { Scorecard } from "../../shared/scoring";
+import { CORE_SCORECARD_IDS, type Scorecard } from "../../shared/scoring";
 
 interface Props {
   cards: Scorecard[];
@@ -12,7 +12,8 @@ interface Props {
 /** "Rank by": the list's default scorecard. The table sorts by it and keeps its column in view. */
 export function LensPicker({ cards, value, onChange, onEdit }: Props) {
   const known = cards.some((c) => c.id === value);
-  const presets = cards.filter((c) => !isCustomId(c.id));
+  const core = cards.filter((c) => (CORE_SCORECARD_IDS as readonly string[]).includes(c.id));
+  const presets = cards.filter((c) => !isCustomId(c.id) && !core.includes(c));
   const custom = cards.filter((c) => isCustomId(c.id));
   return (
     <span className="lens-picker">
@@ -20,7 +21,14 @@ export function LensPicker({ cards, value, onChange, onEdit }: Props) {
         <span className="lens-label">Rank by</span>
         <select value={known ? value : ""} onChange={(e) => onChange(e.target.value || undefined)} aria-label="Rank this list by scorecard">
           <option value="">No scorecard</option>
-          <optgroup label="Built in">
+          <optgroup label="Core">
+            {core.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="More scorecards">
             {presets.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
