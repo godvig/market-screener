@@ -230,8 +230,15 @@ export function WatchlistTable({ rows, ctx, columnIds, onColumns, toolbar, progr
     [defs, ctx, firstExtra, coverage, onRemove, onFix, lensCol, trebles, trebleTitle],
   );
 
+  // The table needs the same array between renders: a fresh one each time makes it re-render forever.
+  const shown = useMemo(() => (onlyTrebles ? rows.filter((r) => trebles.has(r.quote.symbol)) : rows), [rows, onlyTrebles, trebles]);
+  // Leave the filter when the last treble drops out, so the table is never stuck empty.
+  useEffect(() => {
+    if (onlyTrebles && !trebles.size) setOnlyTrebles(false);
+  }, [onlyTrebles, trebles]);
+
   const table = useReactTable({
-    data: onlyTrebles ? rows.filter((r) => trebles.has(r.quote.symbol)) : rows,
+    data: shown,
     columns,
     state: { sorting, globalFilter: filter },
     onSortingChange: setSorting,

@@ -2,6 +2,12 @@
 
 Notable changes, newest first.
 
+## Unreleased
+
+- Fixed: the treble filter froze the page (the table was handed a new array on every render).
+- Fewer default columns: price, 3M, YTD, the core scores and their change, P/E, dividend yield and payout. The rest are a tick away under *Columns*.
+- Light theme redrawn in a mid-light "duck egg" tone instead of near-white.
+
 ## 2026-11-18 – Core scorecards, trebles and a tidier stock page
 
 - **Core scorecards**: *Sundhet*, *Kvalitet & värdering* and *Utdelning* are the default score columns, head the *Rank by* menu and the stock page, and are listed in the sidebar. The other presets sit under *More scorecards*. Saved column choices are kept; *Columns → Reset to default* switches to the new set.

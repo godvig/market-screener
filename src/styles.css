@@ -1,18 +1,19 @@
 :root {
-  /* Racecourse palette: paddock grey-green paper, racing-green ink, brass for "this one". */
-  --bg: #eef1ec;
-  --card: #fbfcfa;
-  --text: #17211c;
-  --muted: #5e6b64;
-  --border: #d6ddd7;
-  --accent: #0e5a43;
+  /* Light theme, "duck egg": the blue-green of an old racecard, dark racing-green ink, brass for "this one".
+     Deliberately a mid-light tone rather than white, so a full table is easy on the eyes. */
+  --bg: #c5d9d5;
+  --card: #deebe8;
+  --text: #0f211d;
+  --muted: #45605a;
+  --border: #a8c0bb;
+  --accent: #0a4d3c;
   --accent-ink: #fff;
-  --brass: #9a6f14;
-  --brass-soft: #f3e6c4;
-  --pos: #1b7f4b;
-  --neg: #b53a2e;
-  --row-hover: #e6eee8;
-  --shadow: 0 1px 2px rgb(23 33 28 / .06), 0 6px 20px rgb(23 33 28 / .06);
+  --brass: #7a5200;
+  --brass-soft: #ead9a2;
+  --pos: #0d6638;
+  --neg: #a3281d;
+  --row-hover: #d0e2de;
+  --shadow: 0 1px 2px rgb(15 33 29 / .08), 0 6px 20px rgb(15 33 29 / .08);
   --font: Barlow, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-cond: "Barlow Condensed", Barlow, "Arial Narrow", sans-serif;
   font-family: var(--font);
