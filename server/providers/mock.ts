@@ -14,6 +14,17 @@ const NAMES: Record<string, [string, string]> = {
   SPY: ["SPDR S&P 500 ETF Trust", "USD"],
 };
 
+/**
+ * Rough price levels for the demo tickers, so a made-up price still looks
+ * like the right order of magnitude. Each walk is scaled to end near its level.
+ */
+const PRICE_LEVEL: Record<string, number> = {
+  "VOLV-B.ST": 280, "ERIC-B.ST": 85, "INVE-B.ST": 290, "ATCO-A.ST": 170, "SAND.ST": 230, "HM-B.ST": 160,
+  "SHB-A.ST": 120, "SEB-A.ST": 160, "TELIA.ST": 32, "AZN.ST": 1450,
+  AAPL: 230, MSFT: 450, NVDA: 140, GOOGL: 180, AMZN: 210, META: 600, SPY: 600, QQQ: 520, VT: 125,
+  "ASML.AS": 700, "NOVO-B.CO": 500, "SAP.DE": 250, "NESN.SW": 85,
+};
+
 function seeded(seedText: string) {
   let h = 2166136261;
   for (const ch of seedText) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
@@ -44,7 +55,23 @@ function walk(symbol: string): Candle[] {
     const lo = Math.min(open, price) * (1 - rand() * vol * 0.5);
     out.push({ time: d.toISOString().slice(0, 10), open, high: hi, low: lo, close: price, volume: Math.round(1e6 * (0.5 + rand())) });
   }
-  return out;
+  const level = PRICE_LEVEL[symbol];
+  if (level == null || !out.length) return out;
+  const k = (level * (0.85 + rand() * 0.3)) / out[out.length - 1].close;
+  return out.map((c) => ({ ...c, open: c.open * k, high: c.high * k, low: c.low * k, close: c.close * k }));
+}
+
+/**
+ * Valuation and dividend for a symbol, shared by the quote and the key
+ * figures so they agree: payout is picked first and yield follows from it
+ * (yield = payout / P/E), and a company either pays a dividend or doesn't.
+ */
+function profile(symbol: string) {
+  const r = seeded(symbol + "profile");
+  const pe = 8 + r() * 32;
+  const paysDividend = r() > 0.25;
+  const payoutRatio = paysDividend ? 20 + r() * 55 : 0;
+  return { pe, paysDividend, payoutRatio, dividendYield: payoutRatio / pe };
 }
 
 export const mockProvider: MarketProvider = {
@@ -60,8 +87,7 @@ export const mockProvider: MarketProvider = {
       const year = h.slice(-252).map((c) => c.close);
       const rand = seeded(symbol + "fundamentals");
       const [name, currency] = NAMES[symbol] ?? [`${symbol} (demo)`, "USD"];
-      const pe = 8 + rand() * 40;
-      const dividendYield = rand() * 5;
+      const { pe, dividendYield, payoutRatio } = profile(symbol);
       return {
         symbol,
         name,
@@ -75,8 +101,7 @@ export const mockProvider: MarketProvider = {
         pe,
         dividendYield,
         dividendPerShare: (last.close * dividendYield) / 100,
-        // payout = dividend / earnings = yield × P/E
-        payoutRatio: dividendYield * pe,
+        payoutRatio,
         fiftyTwoWeekHigh: Math.max(...year),
         fiftyTwoWeekLow: Math.min(...year),
       };
@@ -92,30 +117,36 @@ export const mockProvider: MarketProvider = {
   async getFundamentals(symbol: string): Promise<Fundamentals> {
     const r = seeded(symbol + "keyfigures");
     const pick = (lo: number, hi: number, d = 1) => Number((lo + r() * (hi - lo)).toFixed(d));
-    // A "quality" factor makes some companies consistently better, so scores spread out.
+    // A "quality" factor makes some companies consistently better, as in real
+    // markets: strong margins tend to come with returns on capital and low debt.
     const q = r();
+    const blend = (lo: number, hi: number, toward: number, d = 1) => Number((lo + (hi - lo) * (0.45 * r() + 0.55 * toward)).toFixed(d));
+    const good = (lo: number, hi: number, d = 1) => blend(lo, hi, q, d);
+    const low = (lo: number, hi: number, d = 1) => blend(lo, hi, 1 - q, d);
     const g = (lo: number, hi: number) => pick(lo + q * 6, hi + q * 6);
-    const paysDividend = r() > 0.25;
+    const { pe, paysDividend } = profile(symbol);
+    const price = walk(symbol).at(-1)?.close ?? 100;
     return {
-      forwardPe: pick(6, 35),
-      peg: pick(0.5, 3.5, 2),
+      forwardPe: Number((pe * (0.75 + r() * 0.3)).toFixed(1)),
+      peg: low(0.5, 3.5, 2),
       ps: pick(0.5, 12),
-      pb: pick(0.8, 15),
+      pb: low(0.8, 15),
       evEbit: pick(6, 40),
       evEbitda: pick(4, 25),
-      eps: pick(-2, 25, 2),
-      roe: pick(-5, 30) + q * 10,
-      roa: pick(-2, 15) + q * 5,
-      profitMargin: pick(-5, 25) + q * 8,
-      operatingMargin: pick(-5, 30) + q * 5,
-      ebitdaMargin: pick(0, 35) + q * 5,
-      fcfMargin: pick(-8, 25),
+      // Positive P/E means positive earnings, so EPS and margins follow from it.
+      eps: Number((price / pe).toFixed(2)),
+      roe: good(-5, 40),
+      roa: good(-2, 20),
+      profitMargin: good(2, 30),
+      operatingMargin: good(4, 34),
+      ebitdaMargin: good(0, 40),
+      fcfMargin: good(-8, 28),
       fcfYield: pick(-2, 9, 2),
-      roic: pick(-3, 28) + q * 6,
-      quickRatio: pick(0.4, 2.5, 2),
-      debtToEquity: pick(0.1, 2.8, 2),
-      equityRatio: pick(15, 70),
-      netDebtEbitda: pick(-1, 4, 2),
+      roic: good(-3, 34),
+      quickRatio: good(0.4, 2.5, 2),
+      debtToEquity: low(0.1, 2.8, 2),
+      equityRatio: good(15, 70),
+      netDebtEbitda: low(-1, 4, 2),
       beta: pick(0.4, 1.9, 2),
       revenueGrowth: g(-10, 20),
       revenueCagr3y: g(-5, 15),
