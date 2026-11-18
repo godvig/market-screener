@@ -176,7 +176,6 @@ h3 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spa
 .title-edit { font-size: 18px; font-weight: 600; width: 280px; }
 .list-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 14px; }
 .list-actions button { padding: 4px 10px; font-size: 13px; }
-.list-actions .sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
 
 /* Column picker */
 .picker { position: relative; }
@@ -405,7 +404,7 @@ button.primary:disabled { opacity: 0.5; }
 /* ------------------------------------------------------------------ */
 /* Phones and small tablets                                            */
 /* ------------------------------------------------------------------ */
-.menu-btn, .more-btn, .sym-name, .touch-hint { display: none; }
+.menu-btn, .sym-name, .touch-hint { display: none; }
 .list-header { position: relative; }
 
 @media (max-width: 760px) {
@@ -444,17 +443,6 @@ button.primary:disabled { opacity: 0.5; }
   .crumbs { min-width: 0; flex-wrap: wrap; }
   .crumbs h2 { font-size: 18px; overflow-wrap: anywhere; }
   .title-edit { width: 100%; }
-  .more-btn { display: inline-flex; width: 40px; height: 40px; padding: 0; align-items: center; justify-content: center; font-size: 20px; flex: none; }
-  .list-actions { display: none; }
-  .list-actions.open {
-    display: flex; flex-direction: column; align-items: stretch; gap: 4px;
-    position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; min-width: 200px;
-    background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 6px;
-    box-shadow: 0 12px 32px rgb(0 0 0 / .18);
-  }
-  .list-actions.open button { text-align: left; padding: 10px 12px; font-size: 15px; border: none; }
-  .list-actions.open .sep { width: auto; height: 1px; margin: 2px 0; }
-  .list-actions.open > span:not(.sep) { padding: 6px 12px; }
 
   /* Table: one sticky column with symbol + name, swipe for the rest */
   .card { padding: 10px; border-radius: 10px; }
@@ -675,3 +663,31 @@ h3, .side-title, .picker legend { font-family: var(--font-cond); text-transform:
 .tabs-bar button { font-family: var(--font-cond); font-size: 16px; }
 .tabs-bar button.active { border-bottom-color: var(--brass); }
 select, textarea { font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 5px; padding: 5px 8px; }
+
+/* List actions: Import, plus a "⋯" menu with keyboard shortcuts */
+.list-actions { position: relative; flex-wrap: nowrap; }
+.more-btn { width: 34px; padding: 4px 0; font-size: 16px; line-height: 1; }
+.action-menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; min-width: 210px;
+  display: flex; flex-direction: column; padding: 6px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow);
+}
+.list-actions .action-menu button {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  border: none; background: none; text-align: left; padding: 8px 10px; font-size: 14px; border-radius: 5px;
+}
+.list-actions .action-menu button:hover:not(:disabled), .action-menu button:focus-visible { background: var(--row-hover); }
+.action-menu button:disabled { opacity: .45; cursor: not-allowed; }
+.action-menu .danger-item { color: var(--neg); }
+.action-menu kbd {
+  font: 600 11px/1 var(--font-cond); color: var(--muted); border: 1px solid var(--border);
+  border-radius: 4px; padding: 3px 6px; min-width: 20px; text-align: center;
+}
+.delete-confirm { display: flex; align-items: center; gap: 8px; }
+@media (max-width: 760px) {
+  .more-btn { width: 40px; height: 40px; font-size: 20px; }
+  .list-actions .action-menu button { padding: 12px; font-size: 15px; }
+  .action-menu kbd { display: none; }
+  .list-actions > button:not(.more-btn) { display: none; } /* Import is in the menu */
+  .delete-confirm { flex-wrap: wrap; justify-content: flex-end; }
+}

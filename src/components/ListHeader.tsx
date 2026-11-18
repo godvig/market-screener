@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { decodeText, readTable } from "../../shared/importFile";
 import type { Cell } from "../../shared/importParse";
 import type { ListGroup, Watchlist } from "../../shared/types";
@@ -24,10 +24,10 @@ export function ListHeader({ list, group, canDelete, allLists, onRename, onDupli
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [confirm, setConfirm] = useState(false);
-  /** Phones: the actions sit behind a "⋯" button. */
   const [menu, setMenu] = useState(false);
   const [importError, setImportError] = useState<string>();
   const fileInput = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const finish = () => {
     onRename(draft);
@@ -71,6 +71,61 @@ export function ListHeader({ list, group, canDelete, allLists, onRename, onDupli
     }
   };
 
+  const startRename = () => (setDraft(list.name), setEditing(true));
+  const openFile = () => fileInput.current?.click();
+  /** The list menu. `key` is the keyboard shortcut, shown in the menu and active anywhere on the list page. */
+  const actions: { key: string; label: string; run: () => void; disabled?: boolean; title?: string }[] = [
+    { key: "R", label: "Rename", run: startRename },
+    { key: "C", label: "Make a copy", run: onDuplicate },
+    { key: "E", label: "Export all lists", run: exportLists, title: "Download all lists as a JSON file" },
+    { key: "I", label: "Import…", run: openFile, title: "Lists from a JSON file, or key figures from a CSV/Excel file (e.g. a Börsdata screener export)" },
+    { key: "D", label: "Delete list…", run: () => setConfirm(true), disabled: !canDelete, title: canDelete ? undefined : "You need at least one list" },
+  ];
+  const latest = useRef({ actions, confirm, editing });
+  latest.current = { actions, confirm, editing };
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const { actions, confirm, editing } = latest.current;
+      const target = e.target as HTMLElement | null;
+      const typing = target?.closest("input, textarea, select, [contenteditable]");
+      if (editing || typing || e.ctrlKey || e.metaKey || e.altKey || document.querySelector('[aria-modal="true"]')) return;
+      if (confirm) {
+        if (e.key === "Escape") setConfirm(false);
+        return;
+      }
+      const action = actions.find((a) => a.key === e.key.toUpperCase());
+      if (!action || action.disabled || e.shiftKey) return;
+      e.preventDefault();
+      setMenu(false);
+      action.run();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Close the menu on Escape or a click outside it; arrow keys move between items.
+  useEffect(() => {
+    if (!menu) return;
+    const items = () => [...(menuRef.current?.querySelectorAll<HTMLButtonElement>("[role=menuitem]:not(:disabled)") ?? [])];
+    items()[0]?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenu(false);
+      if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+      e.preventDefault();
+      const all = items();
+      const i = all.indexOf(document.activeElement as HTMLButtonElement);
+      all[(i + (e.key === "ArrowDown" ? 1 : all.length - 1)) % all.length]?.focus();
+    };
+    const onClick = (e: MouseEvent) => !menuRef.current?.contains(e.target as Node) && setMenu(false);
+    window.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onClick);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onClick);
+    };
+  }, [menu]);
+
   return (
     <div className="list-header">
       <div className="crumbs">
@@ -89,26 +144,18 @@ export function ListHeader({ list, group, canDelete, allLists, onRename, onDupli
             }}
           />
         ) : (
-          <h2 onDoubleClick={() => (setDraft(list.name), setEditing(true))} title="Double-click to rename">
+          <h2 onDoubleClick={startRename} title="Double-click or press R to rename">
             {list.name}
           </h2>
         )}
       </div>
-      <button className="more-btn" onClick={() => setMenu((v) => !v)} aria-label="List actions" aria-expanded={menu}>
-        ⋯
-      </button>
-      <div
-        className={`list-actions${menu || confirm ? " open" : ""}`}
-        onClick={(e) => {
-          // On phones, close the menu after an action (Delete keeps it open for its confirmation).
-          if ((e.target as HTMLElement).closest("button")) setTimeout(() => setMenu(false));
-        }}
-      >
+      <div className="list-actions" ref={menuRef}>
         {confirm ? (
-          <>
+          <div className="delete-confirm" role="alert">
             <span>Delete “{list.name}”?</span>
             <button
               className="danger"
+              autoFocus
               onClick={() => {
                 onDelete();
                 setConfirm(false);
@@ -117,22 +164,10 @@ export function ListHeader({ list, group, canDelete, allLists, onRename, onDupli
               Delete
             </button>
             <button onClick={() => setConfirm(false)}>Cancel</button>
-          </>
+          </div>
         ) : (
           <>
-            <button onClick={() => (setDraft(list.name), setEditing(true))}>Rename</button>
-            <button onClick={onDuplicate}>Duplicate</button>
-            <button onClick={() => setConfirm(true)} disabled={!canDelete} title={canDelete ? "Delete this list" : "You need at least one list"}>
-              Delete
-            </button>
-            <span className="sep" />
-            <button onClick={exportLists} title="Download all lists as a JSON file">
-              Export
-            </button>
-            <button
-              onClick={() => fileInput.current?.click()}
-              title="Lists from an exported JSON file, or key figures from a CSV/Excel file (e.g. a Börsdata screener export)"
-            >
+            <button onClick={openFile} title={actions[3].title}>
               Import
             </button>
             {IS_DEMO && (
@@ -146,19 +181,42 @@ export function ListHeader({ list, group, canDelete, allLists, onRename, onDupli
                 Try sample import
               </button>
             )}
-            <input
-              ref={fileInput}
-              type="file"
-              accept="application/json,.json,.csv,text/csv,.txt,.xlsx,.xls,.ods"
-              hidden
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) importFile(f);
-                e.target.value = "";
-              }}
-            />
+            <button className="more-btn" onClick={() => setMenu((v) => !v)} aria-label="List actions" aria-haspopup="menu" aria-expanded={menu}>
+              ⋯
+            </button>
+            {menu && (
+              <div className="action-menu" role="menu" aria-label="List actions">
+                {actions.map((a) => (
+                  <button
+                    key={a.key}
+                    role="menuitem"
+                    className={a.key === "D" ? "danger-item" : undefined}
+                    disabled={a.disabled}
+                    title={a.title}
+                    onClick={() => {
+                      setMenu(false);
+                      a.run();
+                    }}
+                  >
+                    <span>{a.label}</span>
+                    <kbd>{a.key}</kbd>
+                  </button>
+                ))}
+              </div>
+            )}
           </>
         )}
+        <input
+          ref={fileInput}
+          type="file"
+          accept="application/json,.json,.csv,text/csv,.txt,.xlsx,.xls,.ods"
+          hidden
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) importFile(f);
+            e.target.value = "";
+          }}
+        />
         {importError && <span className="neg">{importError}</span>}
       </div>
     </div>
