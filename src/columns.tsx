@@ -1,4 +1,5 @@
 // Every table column the user can show or hide, in display order.
+import { criterionName, type MetricLang } from "./metricNames";
 // "standard" columns come first; everything in "extra" sits to the right of a divider.
 import type { ReactNode } from "react";
 import { MANUAL_LEVELS, METRIC_BY_KEY, metricValue, rate, type ManualKey, type MetricKey, type Rating } from "../shared/metrics";
@@ -23,6 +24,8 @@ export interface Ctx {
   snapshots?: Record<string, Snapshot[]>;
   /** Period of the score-change column, in days. */
   trendDays: number;
+  /** Language for key figure names; part of the context so the table re-renders when it changes. */
+  metricLang?: MetricLang;
 }
 
 export interface ColumnDef {
@@ -233,7 +236,7 @@ const trendCol: ColumnDef = {
     const top = t.change.changes
       .filter((c) => Math.abs(c.effect) >= 0.5)
       .slice(0, 3)
-      .map((c) => `${c.criterion.label}: ${formatMetric(c.criterion.metric, c.from)} → ${formatMetric(c.criterion.metric, c.to)}`);
+      .map((c) => `${criterionName(c.criterion)}: ${formatMetric(c.criterion.metric, c.from)} → ${formatMetric(c.criterion.metric, c.to)}`);
     const tip = `${t.card.name}, ${trendLabel(ctx.trendDays)}: ${t.change.from.pct} → ${t.change.to.pct}${top.length ? "\n" + top.join("\n") : ""}`;
     return (
       <span className={`trend-cell ${t.delta > 0 ? "pos" : t.delta < 0 ? "neg" : "muted"}`} title={tip}>

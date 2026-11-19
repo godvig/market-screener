@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { columnName } from "../metricNames";
 import { scoreBand, score } from "../../shared/scoring";
 import type { Candle, HistoryRange, StockMeta, WatchlistRow } from "../../shared/types";
 import { api } from "../api";
@@ -221,7 +222,7 @@ export function DetailPanel({ row, ctx, listName, peers, lensId, prev, next, onB
                     <dl className="stats">
                       {cols.map((c) => (
                         <div key={c.id} title={c.title} className={scored.has(c.id) ? "in-score" : undefined}>
-                          <dt>{c.label}</dt>
+                          <dt>{columnName(c)}</dt>
                           <dd>{c.render ? c.render(row, ctx) : String(c.value(row, ctx))}</dd>
                         </div>
                       ))}

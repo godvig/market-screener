@@ -1,3 +1,4 @@
+import { columnName } from "../metricNames";
 import {
   createColumnHelper,
   flexRender,
@@ -202,7 +203,7 @@ export function WatchlistTable({ rows, ctx, columnIds, onColumns, toolbar, progr
         // undefined (not null) so TanStack's sortUndefined keeps missing values last
         col.accessor((r) => d.value(r, ctx) ?? undefined, {
           id: d.id,
-          header: d.header ? d.header(ctx) : d.label,
+          header: d.header ? d.header(ctx) : columnName(d),
           meta: { title: d.title, lens: d.id === lensCol, divider: d.id === firstExtra, left: d.align === "left", coverage: coverage.get(d.id) } satisfies ColMeta,
           sortingFn: "basic",
           sortUndefined: "last",
@@ -338,7 +339,7 @@ export function WatchlistTable({ rows, ctx, columnIds, onColumns, toolbar, progr
   );
 }
 
-/** Three overlapping rings: a treble, three winners on one card. */
+/** Three overlapping rings: green on three scorecards. */
 export function TrebleIcon({ size = 14 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden="true" className="treble-icon">

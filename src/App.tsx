@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { setMetricLang, useMetricLang } from "./metricNames";
 import type { Ctx } from "./columns";
 import type { KnownStock } from "../shared/importMatch";
 import type { Cell } from "../shared/importParse";
@@ -36,6 +37,7 @@ export function App() {
   const [fixing, setFixing] = useState<string>();
   const [importing, setImporting] = useState<{ fileName: string; table: Cell[][] }>();
   const [menuOpen, setMenuOpen] = useState(false);
+  const metricLang = useMetricLang();
   useEffect(() => {
     if (!menuOpen) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
@@ -148,8 +150,9 @@ export function App() {
       lensId: list?.scorecardId,
       snapshots,
       trendDays: store?.settings?.trendDays ?? 91,
+      metricLang,
     }),
-    [baseCurrency, store?.stocks, store?.scorecards, list?.scorecardId, snapshots, store?.settings?.trendDays, store?.settings?.trafficLights, store?.settings?.smoothScoring, store?.settings?.minCoverage],
+    [metricLang, baseCurrency, store?.stocks, store?.scorecards, list?.scorecardId, snapshots, store?.settings?.trendDays, store?.settings?.trafficLights, store?.settings?.smoothScoring, store?.settings?.minCoverage],
   );
   const fixMeta = fixing ? store?.stocks?.[fixing] : undefined;
 
@@ -194,6 +197,14 @@ export function App() {
           <AddSymbol onAdd={(sym) => s.addSymbol(list.id, sym)} />
           <button onClick={refresh} disabled={loading}>
             {loading ? "Loading…" : "Refresh"}
+          </button>
+          <button
+            className="theme-toggle lang-toggle"
+            onClick={() => setMetricLang(metricLang === "sv" ? "en" : "sv")}
+            aria-pressed={metricLang === "sv"}
+            title={metricLang === "sv" ? "Key figures have Swedish names. Click for English." : "Key figure names in Swedish (Direktavkastning, Utdelningsandel …)"}
+          >
+            {metricLang === "sv" ? "SV" : "EN"}
           </button>
           <ThemeToggle />
         </header>

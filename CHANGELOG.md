@@ -6,7 +6,8 @@ Notable changes, newest first.
 
 - Fixed: the treble filter froze the page (the table was handed a new array on every render).
 - Fewer default columns: price, 3M, YTD, the core scores and their change, P/E, dividend yield and payout. The rest are a tick away under *Columns*.
-- Light theme redrawn in a mid-light "duck egg" tone instead of near-white.
+- Light theme redrawn in a mid-light blue-green instead of near-white.
+- Key figures can be shown under their Swedish names (Direktavkastning, Utdelningsandel …) with the EN/SV button; the rest of the interface stays in English.
 
 ## 2026-11-18 – Core scorecards, trebles and a tidier stock page
 
@@ -28,7 +29,7 @@ Notable changes, newest first.
 
 - **Score change column** (Δ 1M / 3M / 6M / 1Y): how the list's scorecard (or Sundhet) has moved, from the stored key figures; the tooltip names the figures that moved it. The period is set under *Columns*. New endpoint `GET /api/snapshots?symbols=…`.
 - A ranked list now leads with its lens score and the score change, right after the name.
-- **New look**: a racecard theme. Barlow for text, Barlow Condensed for headings, column heads and the score badges (self-hosted via Fontsource); paddock grey-green and racing green with brass marking what the list is ranked by. Light and dark themes with a toggle (follows the system by default; the choice is kept per browser). The price chart follows the theme.
+- **New look**: a new theme. Barlow for text, Barlow Condensed for headings, column heads and the score badges (self-hosted via Fontsource); green tones with brass marking what the list is ranked by. Light and dark themes with a toggle (follows the system by default; the choice is kept per browser). The price chart follows the theme.
 - Visible keyboard focus everywhere, reduced motion respected, no more all-caps labels.
 - README: new demo GIF and screenshots.
 

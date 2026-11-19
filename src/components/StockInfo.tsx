@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { metricName } from "../metricNames";
 import { MANUAL_LEVELS, METRIC_BY_KEY, type ManualKey } from "../../shared/metrics";
 import type { StockMeta } from "../../shared/types";
 import { HorseIcon, KNOWN_TYPES } from "./HorseIcon";
@@ -63,7 +64,7 @@ export function StockInfo({ symbol, meta, usedTypes = [], onChange, onAssess }: 
           const v = meta?.assessments?.[k];
           return (
             <label key={k} className="info-field" title={def?.description}>
-              <span>{def?.label ?? k}</span>
+              <span>{metricName(`manual.${k}`, def?.label ?? k)}</span>
               <select value={v ?? ""} onChange={(e) => onAssess(k, e.target.value === "" ? null : Number(e.target.value))}>
                 <option value="">Not assessed</option>
                 {MANUAL_LEVELS[k].map((label, i) => (

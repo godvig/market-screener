@@ -1,5 +1,5 @@
 :root {
-  /* Light theme, "duck egg": the blue-green of an old racecard, dark racing-green ink, brass for "this one".
+  /* Light theme: a mid-light blue-green, dark green ink, brass for "this one".
      Deliberately a mid-light tone rather than white, so a full table is easy on the eyes. */
   --bg: #c5d9d5;
   --card: #deebe8;
@@ -625,9 +625,9 @@ input.sc-name { padding: 5px 8px; }
 .spark-wrap { display: flex; gap: 6px; align-items: stretch; }
 .spark-scale { display: flex; flex-direction: column; justify-content: space-between; font-size: 10px; font-variant-numeric: tabular-nums; min-width: 18px; text-align: right; }
 
-/* ---- racecard look ----
+/* ---- look ----
    Barlow for reading, Barlow Condensed for anything you scan: headings, column
-   heads and the score "saddle cloths". Brass marks the one thing in focus
+   heads and the score badges. Brass marks the one thing in focus
    (the lens a list is ranked by, the active tab). */
 h1, h2, .sc-name, .detail-head h2 { font-family: var(--font-cond); font-weight: 700; letter-spacing: .005em; }
 h1 { font-size: 26px; line-height: 1.1; }
@@ -635,7 +635,7 @@ h2 { font-size: 22px; }
 th { font-family: var(--font-cond); font-size: 14px; font-weight: 600; letter-spacing: .01em; }
 .badge { font-family: var(--font-cond); text-transform: none; letter-spacing: .02em; font-size: 13px; border-radius: 3px; padding: 1px 7px; }
 
-/* Score badges as saddle cloths: square-cut, condensed numerals. */
+/* Score badges: square-cut, condensed numerals. */
 .badge-score { font-family: var(--font-cond); font-weight: 700; font-size: 16px; border-radius: 3px; min-width: 34px; letter-spacing: .01em; line-height: 1.25; }
 .sb-ok { color: #2a1d00; }
 .sb-none { color: var(--muted); }
@@ -740,3 +740,4 @@ tbody tr.treble:hover > td { background: color-mix(in srgb, var(--brass-soft) 75
 .side-card.core::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 1px; background: var(--brass); margin-right: 8px; vertical-align: 1px; }
 .side-more > summary { cursor: pointer; font-size: 12px; color: var(--muted); padding: 5px 8px 5px 12px; }
 .side-more > summary:hover { color: var(--text); }
+.lang-toggle { font: 700 13px/1 var(--font-cond); letter-spacing: .04em; }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { criterionName } from "../metricNames";
 import { MANUAL_LEVELS, type ManualKey, type MetricKey } from "../../shared/metrics";
 import { score, scoreBand } from "../../shared/scoring";
 import type { WatchlistRow } from "../../shared/types";
@@ -70,7 +71,7 @@ export function ScorePanel({ row, ctx, onAssess }: Props) {
                       const frac = d.points == null || d.max === 0 ? null : d.points / d.max;
                       return (
                         <tr key={d.criterion.id} className={d.value == null ? "missing" : ""}>
-                          <td className="left">{d.criterion.label}</td>
+                          <td className="left">{criterionName(d.criterion)}</td>
                           <td>
                             {manual ? (
                               <select

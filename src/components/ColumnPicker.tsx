@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { columnName } from "../metricNames";
 import type { WatchlistRow } from "../../shared/types";
 import { DEFAULT_COLUMNS, TREND_CHOICES, columnCoverage, columnsFor, customOf, insertColumn, normaliseColumnIds, type ColumnDef, type Ctx } from "../columns";
 
@@ -78,7 +79,7 @@ export function ColumnPicker({ value, onChange, rows, ctx, onTrafficLights, onSm
                 return (
                   <label key={c.id} title={c.title}>
                     <input type="checkbox" checked={selected.has(c.id)} onChange={() => toggle(c.id)} />
-                    <span className="picker-label">{c.label}</span>
+                    <span className="picker-label">{columnName(c)}</span>
                     {cov != null && (
                       <span
                         className={`cov ${cov < 0.5 ? "cov-low" : cov < 0.9 ? "cov-mid" : ""}`}

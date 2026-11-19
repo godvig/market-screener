@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { metricName } from "../metricNames";
 import { METRICS, METRIC_BY_KEY, type MetricKey } from "../../shared/metrics";
 import { score, scoreBand, type Criterion, type Scorecard, type Tier } from "../../shared/scoring";
 import {
@@ -327,7 +328,7 @@ export function ScorecardEditor({ cards, selectedId, rows, ctx, listName, lensId
                         <optgroup key={group} label={group}>
                           {metrics.map((m) => (
                             <option key={m.key} value={m.key}>
-                              {m.label}
+                              {metricName(m.key, m.label)}
                             </option>
                           ))}
                         </optgroup>

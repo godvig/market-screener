@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { criterionName } from "../metricNames";
 import { explainScore, type CriterionWhy } from "../../shared/explain";
 import { scoreBand, type Scorecard } from "../../shared/scoring";
 import type { WatchlistRow } from "../../shared/types";
@@ -91,8 +92,8 @@ export function WhyPanel({ row, peers, ctx, listName, initialCard, onShowAll }: 
           </button>
         )}
         {why.missing.length > 0 && (
-          <span className="muted" title={why.missing.map((m) => m.criterion.label).join(", ")}>
-            Missing: {why.missing.slice(0, 3).map((m) => m.criterion.label).join(", ")}
+          <span className="muted" title={why.missing.map((m) => criterionName(m.criterion)).join(", ")}>
+            Missing: {why.missing.slice(0, 3).map((m) => criterionName(m.criterion)).join(", ")}
             {why.missing.length > 3 && ` +${why.missing.length - 3}`}
           </span>
         )}
@@ -111,8 +112,8 @@ function WhyRow({ c, scale }: { c: CriterionWhy; scale: number }) {
   const metric = c.criterion.metric;
   return (
     <li className="why-row">
-      <span className="why-label" title={c.criterion.label}>
-        {c.criterion.label}
+      <span className="why-label" title={criterionName(c.criterion)}>
+        {criterionName(c.criterion)}
       </span>
       <span className="why-value">
         <strong>{formatMetric(metric, c.value)}</strong>
@@ -204,7 +205,7 @@ function ScoreTrend({ row, card, ctx }: { row: WatchlistRow; card: Scorecard; ct
         <ul className="trend-changes small">
           {change.changes.filter((c) => Math.abs(c.effect) >= 0.5 || c.from == null || c.to == null).slice(0, 3).map((c) => (
             <li key={c.criterion.id}>
-              <span>{c.criterion.label}</span>{" "}
+              <span>{criterionName(c.criterion)}</span>{" "}
               <span className="muted">
                 {formatMetric(c.criterion.metric, c.from)} → {formatMetric(c.criterion.metric, c.to)}
               </span>{" "}
