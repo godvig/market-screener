@@ -9,6 +9,12 @@ Notable changes, newest first.
 - Light theme redrawn in a mid-light blue-green instead of near-white.
 - Key figures can be shown under their Swedish names (Direktavkastning, Utdelningsandel …) with the EN/SV button; the rest of the interface stays in English.
 
+## 2026-11-23 – Treble history and coverage bars
+
+- **Treble history** on the stock page: when the stock became a treble (or was one before), worked out from the saved key figures, with the price change over the period. The table's treble marker says since when.
+- **Coverage bars** replace the "19/21" next to each score: a thin bar shows how much of the scorecard had data, and the tooltip names what is missing. Hidden at full coverage.
+- README: AI-assistance note, new screenshots and demo GIF.
+
 ## 2026-11-18 – Core scorecards, trebles and a tidier stock page
 
 - **Core scorecards**: *Sundhet*, *Kvalitet & värdering* and *Utdelning* are the default score columns, head the *Rank by* menu and the stock page, and are listed in the sidebar. The other presets sit under *More scorecards*. Saved column choices are kept; *Columns → Reset to default* switches to the new set.
