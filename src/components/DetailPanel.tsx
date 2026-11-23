@@ -2,8 +2,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import { columnName } from "../metricNames";
 import { scoreBand, score } from "../../shared/scoring";
 import type { Candle, HistoryRange, StockMeta, WatchlistRow } from "../../shared/types";
+import type { TreblePeriod } from "../../shared/scoreHistory";
 import { api } from "../api";
-import { COLUMNS, TREND_COL, coreCards, coreNames, isTreble, metaOf, sourceOf, type Ctx } from "../columns";
+import { COLUMNS, TREND_COL, coreCards, coreNames, isTreble, metaOf, shortDate, sourceOf, treblePeriodsOf, type Ctx } from "../columns";
 import { fmtBig, fmtNum, fmtPct, sameCurrency, toBase, tone } from "../format";
 import { HorseIcon } from "./HorseIcon";
 import { PriceChart } from "./PriceChart";
@@ -108,6 +109,7 @@ export function DetailPanel({ row, ctx, listName, peers, lensId, prev, next, onB
     ...coreCards(ctx).filter((c) => c.id !== lens?.id),
   ].slice(0, 4);
   const isTrebleStock = isTreble(row, ctx);
+  const periods = treblePeriodsOf(row, ctx);
 
   return (
     <div className="stock-view">
@@ -150,14 +152,19 @@ export function DetailPanel({ row, ctx, listName, peers, lensId, prev, next, onB
             )}
             {q.source && <div className="muted small">Source: {q.source}</div>}
           </div>
-          {isTrebleStock && (
-            <p className="treble-ribbon" title="A starting point for a closer look, not a buy signal on its own.">
-              <TrebleIcon size={16} />
-              <span>
-                <strong>Treble</strong> · green on{" "}
-                {paysDividend(sourceOf(row, ctx)) ? coreNames(ctx) : `${coreNames(ctx, coreCards(ctx).filter((c) => c.id !== "dividend"))} (no dividend paid)`}
-              </span>
-            </p>
+          {(isTrebleStock || periods.length > 0) && (
+            <div className="treble-block">
+              {isTrebleStock && (
+                <p className="treble-ribbon" title="A starting point for a closer look, not a buy signal on its own.">
+                  <TrebleIcon size={16} />
+                  <span>
+                    <strong>Treble</strong> · green on{" "}
+                    {paysDividend(sourceOf(row, ctx)) ? coreNames(ctx) : `${coreNames(ctx, coreCards(ctx).filter((c) => c.id !== "dividend"))} (no dividend paid)`}
+                  </span>
+                </p>
+              )}
+              <TrebleHistory periods={periods} candles={candles} current={isTrebleStock} />
+            </div>
           )}
           <div className="mini-scores">
             {miniCards.map((c) => {
@@ -279,5 +286,49 @@ function FigureGroup({ title, summary, children }: { title: string; summary: str
       </summary>
       {children}
     </details>
+  );
+}
+
+/** Close on the first trading day on or after `day`, or null when the chart doesn't reach that far back. */
+function closeOn(candles: Candle[], day: string): number | null {
+  if (!candles.length || candles[0].time > day) return null;
+  return candles.find((c) => c.time >= day)?.close ?? null;
+}
+
+/**
+ * When this stock was a treble and how the price moved while it was. The
+ * record that tells whether trebles are worth a look: it grows from the key
+ * figures saved each day, so it starts short.
+ */
+function TrebleHistory({ periods, candles, current }: { periods: TreblePeriod[]; candles: Candle[] | null; current: boolean }) {
+  if (!periods.length) return null;
+  const last = candles?.at(-1);
+  const items = [...periods].reverse().slice(0, 4).map((p) => {
+    const start = candles ? closeOn(candles, p.from) : null;
+    const end = p.to == null ? (last?.close ?? null) : candles ? closeOn(candles, p.to) : null;
+    // No change to show for a run that began on the last trading day.
+    const change = start && end && p.from !== p.to && p.from < (last?.time ?? "") ? ((end - start) / start) * 100 : null;
+    return { ...p, change };
+  });
+  return (
+    <ul className="treble-history" aria-label="Treble history">
+      {items.map((p) => (
+        <li key={p.from}>
+          {p.to == null
+            ? `${current ? "Treble since" : "Treble from"} ${shortDate(p.from)}`
+            : p.to === p.from
+              ? `Was a treble on ${shortDate(p.from)}`
+              : `Was a treble ${shortDate(p.from)}–${shortDate(p.to)}`}
+          {p.change != null && (
+            <span className={p.change >= 0 ? "pos" : "neg"} title={p.to == null ? "Price change since it became a treble" : "Price change while it was a treble"}>
+              {" "}
+              {p.change >= 0 ? "+" : "−"}
+              {Math.abs(p.change).toFixed(1)} %
+            </span>
+          )}
+        </li>
+      ))}
+      {periods.length > 4 && <li className="muted">and {periods.length - 4} earlier</li>}
+    </ul>
   );
 }

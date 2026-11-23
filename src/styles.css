@@ -741,3 +741,13 @@ tbody tr.treble:hover > td { background: color-mix(in srgb, var(--brass-soft) 75
 .side-more > summary { cursor: pointer; font-size: 12px; color: var(--muted); padding: 5px 8px 5px 12px; }
 .side-more > summary:hover { color: var(--text); }
 .lang-toggle { font: 700 13px/1 var(--font-cond); letter-spacing: .04em; }
+
+/* Coverage bar under a score: how much of the scorecard had data */
+.score { flex-direction: column; align-items: center; gap: 3px; }
+.cov-bar { display: block; width: 30px; height: 3px; border-radius: 2px; background: var(--border); overflow: hidden; }
+.cov-bar i { display: block; height: 100%; background: var(--muted); }
+.score.thin .cov-bar i { background: var(--neg); }
+
+/* Treble history on the stock page */
+.treble-block { display: flex; flex-direction: column; gap: 6px; align-self: center; }
+.treble-history { list-style: none; margin: 0; padding: 0; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 2px; }

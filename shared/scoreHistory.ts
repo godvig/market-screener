@@ -134,3 +134,31 @@ export function parseSnapshots(input: unknown): Snapshot[] {
   }
   return out.sort((a, b) => a.d.localeCompare(b.d));
 }
+
+/** A stretch of days a stock was a treble. `to` is null while it still is. */
+export interface TreblePeriod {
+  from: string;
+  /** Last snapshot day it was still a treble. */
+  to: string | null;
+}
+
+/**
+ * When a stock was a treble, from its saved key figures: each run of
+ * snapshots on which `isTreble` held becomes one period. Gaps between
+ * snapshots (days the list wasn't loaded) don't break a run.
+ */
+export function treblePeriods(snaps: Snapshot[], isTreble: (source: MetricSource) => boolean, meta?: StockMeta): TreblePeriod[] {
+  const out: TreblePeriod[] = [];
+  let open: TreblePeriod | null = null;
+  let last: string | null = null;
+  for (const s of snaps) {
+    const on = isTreble(sourceOfSnapshot(s, meta));
+    if (on && !open) out.push((open = { from: s.d, to: null }));
+    if (!on && open) {
+      open.to = last;
+      open = null;
+    }
+    last = s.d;
+  }
+  return out;
+}

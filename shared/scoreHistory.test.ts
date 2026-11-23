@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emptyMetrics } from "./analysis";
-import { addSnapshot, explainChange, parseSnapshots, scoreHistory, snapshotBefore, snapshotOf, type Snapshot } from "./scoreHistory";
+import { addSnapshot, explainChange, parseSnapshots, scoreHistory, snapshotBefore, snapshotOf, treblePeriods, type Snapshot } from "./scoreHistory";
 import type { Scorecard } from "./scoring";
 import type { WatchlistRow } from "./types";
 
@@ -88,5 +88,23 @@ describe("scoring history", () => {
       { d: "2026-11-01", f: {}, m: {} },
       { d: "2026-11-02", f: { roic: 5 }, m: {} },
     ]);
+  });
+});
+
+describe("treblePeriods", () => {
+  const snap = (d: string, roe: number): Snapshot => ({ d, f: { roe }, m: {} });
+  const isTreble = (src: { fundamentals: { roe?: number } }) => (src.fundamentals.roe ?? 0) > 15;
+
+  it("turns runs of treble days into periods", () => {
+    const snaps = [snap("2026-10-01", 10), snap("2026-10-02", 20), snap("2026-10-05", 22), snap("2026-10-06", 12), snap("2026-10-09", 18)];
+    expect(treblePeriods(snaps, isTreble)).toEqual([
+      { from: "2026-10-02", to: "2026-10-05" },
+      { from: "2026-10-09", to: null },
+    ]);
+  });
+
+  it("is empty when the stock never was one", () => {
+    expect(treblePeriods([snap("2026-10-01", 5), snap("2026-10-02", 6)], isTreble)).toEqual([]);
+    expect(treblePeriods([], isTreble)).toEqual([]);
   });
 });

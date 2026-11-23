@@ -10,7 +10,7 @@ import {
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from "react";
 import type { WatchlistRow } from "../../shared/types";
-import { TREND_COL, columnCoverage, coreNames, customOf, isTreble, metaOf, moveColumn, visibleColumns, type Ctx } from "../columns";
+import { TREND_COL, columnCoverage, coreNames, customOf, isTreble, metaOf, moveColumn, shortDate, treblePeriodsOf, visibleColumns, type Ctx } from "../columns";
 import { HorseIcon } from "./HorseIcon";
 
 const col = createColumnHelper<WatchlistRow>();
@@ -53,6 +53,16 @@ export function WatchlistTable({ rows, ctx, columnIds, onColumns, toolbar, progr
   const [onlyTrebles, setOnlyTrebles] = useState(false);
   /** Rows green on all three core scorecards. */
   const trebles = useMemo(() => new Set(rows.filter((r) => isTreble(r, ctx)).map((r) => r.quote.symbol)), [rows, ctx]);
+  /** "Treble since 12 Nov. " per treble, from the saved history when there is one. */
+  const sinceBySymbol = useMemo(() => {
+    const out = new Map<string, string>();
+    for (const r of rows) {
+      if (!trebles.has(r.quote.symbol)) continue;
+      const open = treblePeriodsOf(r, ctx).at(-1);
+      if (open && open.to == null) out.set(r.quote.symbol, `Treble since ${shortDate(open.from)}. `);
+    }
+    return out;
+  }, [rows, trebles, ctx]);
   const trebleTitle = `Treble: green on ${coreNames(ctx)}, each with enough data (a company that pays no dividend is judged without Utdelning). A starting point for a closer look, not a buy signal on its own.`;
   const [dragId, setDragId] = useState<string | null>(null);
   const [drop, setDrop] = useState<{ id: string; after: boolean } | null>(null);
@@ -147,7 +157,7 @@ export function WatchlistTable({ rows, ctx, columnIds, onColumns, toolbar, progr
             <>
               <strong>{c.getValue()}</strong>
               {trebles.has(r.quote.symbol) && (
-                <span className="treble-mark" title={trebleTitle} aria-label="Treble">
+                <span className="treble-mark" title={(sinceBySymbol.get(r.quote.symbol) ?? "") + trebleTitle} aria-label="Treble">
                   <TrebleIcon />
                 </span>
               )}
@@ -228,7 +238,7 @@ export function WatchlistTable({ rows, ctx, columnIds, onColumns, toolbar, progr
         ),
       }),
     ],
-    [defs, ctx, firstExtra, coverage, onRemove, onFix, lensCol, trebles, trebleTitle],
+    [defs, ctx, firstExtra, coverage, onRemove, onFix, lensCol, trebles, trebleTitle, sinceBySymbol],
   );
 
   // The table needs the same array between renders: a fresh one each time makes it re-render forever.

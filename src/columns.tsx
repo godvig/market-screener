@@ -2,12 +2,12 @@
 import { criterionName, type MetricLang } from "./metricNames";
 // "standard" columns come first; everything in "extra" sits to the right of a divider.
 import type { ReactNode } from "react";
-import { MANUAL_LEVELS, METRIC_BY_KEY, metricValue, rate, type ManualKey, type MetricKey, type Rating } from "../shared/metrics";
+import { MANUAL_LEVELS, METRIC_BY_KEY, metricValue, rate, type ManualKey, type MetricKey, type MetricSource, type Rating } from "../shared/metrics";
 import { isImportSource } from "../shared/importMerge";
 import { CORE_SCORECARD_IDS, SCORECARDS, score, scoreBand, treble, type ScoreOptions, type Scorecard } from "../shared/scoring";
 import type { FundamentalKey, StockMeta, WatchlistRow } from "../shared/types";
 import { HorseIcon, investmentRank } from "./components/HorseIcon";
-import { explainChange, snapshotBefore, type Snapshot } from "../shared/scoreHistory";
+import { explainChange, snapshotBefore, treblePeriods, type Snapshot, type TreblePeriod } from "../shared/scoreHistory";
 import { fmtBig, fmtNum, fmtPct, sameCurrency, toBase, tone } from "./format";
 
 export interface Ctx {
@@ -130,7 +130,26 @@ const returnCol = (id: string, label: string, key: "ret1m" | "ret3m" | "ret6m" |
 
 const pctOf = (share: number) => `${Math.round(share * 100)} %`;
 
-/** Score badge: 0–100 with coverage, coloured by band. Greyed out when too little data backs the score. */
+/**
+ * Thin bar under a score showing how much of the scorecard had data. Hidden
+ * at full coverage, so it only shows up when a score leans on part of the card.
+ */
+function CoverageBar({ coverage }: { coverage: number }) {
+  if (coverage >= 0.999) return null;
+  return (
+    <span className="cov-bar" aria-hidden="true">
+      <i style={{ width: `${Math.round(coverage * 100)}%` }} />
+    </span>
+  );
+}
+
+/** Names of the criteria that had no data, for a tooltip. */
+const missingNames = (s: ReturnType<typeof score>) => {
+  const names = s.details.filter((d) => d.value == null).map((d) => criterionName(d.criterion));
+  return names.length ? ` Missing: ${names.length > 5 ? `${names.slice(0, 5).join(", ")} and ${names.length - 5} more` : names.join(", ")}.` : "";
+};
+
+/** Score badge: 0–100, coloured by band, with a coverage bar when data is missing. Greyed out when too little data backs the score. */
 export function ScoreBadge({ card, r, ctx }: { card: Scorecard; r: WatchlistRow; ctx: Ctx }) {
   const s = score(card, sourceOf(r, ctx), ctx.scoring);
   if (s.rawPct == null) return <span className="muted">–</span>;
@@ -138,24 +157,20 @@ export function ScoreBadge({ card, r, ctx }: { card: Scorecard; r: WatchlistRow;
     return (
       <span
         className="score thin"
-        title={`${card.name}: too little data for a score. ${s.covered}/${s.total} metrics had data, covering ${pctOf(s.coverage)} of the points (${pctOf(ctx.scoring.minCoverage ?? 0.6)} needed). On those metrics it would be ${s.rawPct}.`}
+        title={`${card.name}: too little data for a score. ${s.covered} of ${s.total} metrics had data, covering ${pctOf(s.coverage)} of the points (${pctOf(ctx.scoring.minCoverage ?? 0.6)} needed). On those metrics it would be ${s.rawPct}.${missingNames(s)}`}
       >
         <span className="badge-score sb-none">–</span>
-        <small>
-          {s.covered}/{s.total}
-        </small>
+        <CoverageBar coverage={s.coverage} />
       </span>
     );
   }
   return (
     <span
       className="score"
-      title={`${card.name}: ${s.points} of ${s.max} possible points (${s.covered}/${s.total} metrics had data = ${pctOf(s.coverage)} of the points; ${s.fullMax} with all data)`}
+      title={`${card.name}: ${s.points} of ${s.max} possible points. Coverage ${pctOf(s.coverage)}: ${s.covered} of ${s.total} metrics had data.${missingNames(s)}`}
     >
       <span className={`badge-score sb-${scoreBand(s.pct)}`}>{s.pct}</span>
-      <small>
-        {s.covered}/{s.total}
-      </small>
+      <CoverageBar coverage={s.coverage} />
     </span>
   );
 }
@@ -165,7 +180,17 @@ export const coreCards = (ctx: Ctx): Scorecard[] =>
   CORE_SCORECARD_IDS.flatMap((id) => ctx.scorecards.find((c) => c.id === id) ?? []);
 
 /** Green on all three core scorecards, each with enough data. */
-export const isTreble = (r: WatchlistRow, ctx: Ctx): boolean => !r.error && treble(coreCards(ctx), sourceOf(r, ctx), ctx.scoring);
+export const isTreble = (r: WatchlistRow, ctx: Ctx): boolean => !r.error && trebleOf(sourceOf(r, ctx), ctx);
+
+/** The treble test on any set of figures, e.g. a saved snapshot. */
+export const trebleOf = (source: MetricSource, ctx: Ctx): boolean => treble(coreCards(ctx), source, ctx.scoring);
+
+/** When a row was a treble, from its saved snapshots (empty until history loads). */
+export const treblePeriodsOf = (r: WatchlistRow, ctx: Ctx): TreblePeriod[] =>
+  treblePeriods(ctx.snapshots?.[r.quote.symbol] ?? [], (src) => trebleOf(src, ctx), metaOf(r, ctx));
+
+/** "12 Nov" */
+export const shortDate = (d: string) => new Date(d + "T12:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
 /** Names of the core scorecards for a sentence: "Sundhet, Kvalitet & värdering and Utdelning". */
 export const coreNames = (ctx: Ctx, cards = coreCards(ctx)): string => {
@@ -176,7 +201,7 @@ export const coreNames = (ctx: Ctx, cards = coreCards(ctx)): string => {
 const scoreCol = (card: Scorecard, defaultOn: boolean): ColumnDef => ({
   id: `score.${card.id}`,
   label: card.name,
-  title: `${card.description} (${card.origin}). 0–100 = points relative to the points possible on the metrics that had data; the small number is coverage. No score is shown when coverage is too low.`,
+  title: `${card.description} (${card.origin}). 0–100 = points relative to the points possible on the metrics that had data; the bar underneath shows how much of the scorecard had data (none at full coverage). No score is shown when coverage is too low.`,
   tier: "extra",
   section: "Scores",
   defaultOn,
