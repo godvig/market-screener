@@ -8,7 +8,7 @@ A stock screener built around **your own scorecards**. Rank a watchlist by what 
 
 ## Live demo
 
-**[screener.godvig.com](https://screener.godvig.com/)**: made-up prices, runs entirely in your browser, no account.
+**[screener.godvig.com](https://screener.godvig.com/)**: made-up prices, runs entirely in your browser, no account. Visits to the demo are counted anonymously with [GoatCounter](https://www.goatcounter.com/) (no cookies; one request with the path, referrer and screen width, see [`src/counter.ts`](src/counter.ts)). A local install sends nothing.
 
 | Ranked by a scorecard | Why this score | Build your own |
 | --- | --- | --- |
@@ -69,6 +69,7 @@ shared/            Types + analysis functions (used by server and client)
 docs/examples/     made-up sample export for the import
 src/               React client (Vite, TanStack Table, lightweight-charts)
   columns.tsx      every table column in one registry
+  counter.ts       anonymous visit counting, for the hosted demo only
 ```
 
 To add a data source, implement `MarketProvider` in `server/providers/` and register it in `server/providers/index.ts`.

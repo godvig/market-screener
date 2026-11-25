@@ -372,6 +372,7 @@ export function App() {
           </span>
           <span className="touch-hint">Tap a row to open the stock · swipe the table for more columns · </span>
           Free data may be delayed. Not investment advice.
+          {IS_DEMO && " Visits to this demo are counted anonymously, without cookies."}
         </footer>
       </main>
     </div>

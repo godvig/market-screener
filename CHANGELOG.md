@@ -2,18 +2,22 @@
 
 Notable changes, newest first.
 
-## Unreleased
+## 2026-11-25 – Visit counting on the demo
 
-- Fixed: the treble filter froze the page (the table was handed a new array on every render).
-- Fewer default columns: price, 3M, YTD, the core scores and their change, P/E, dividend yield and payout. The rest are a tick away under *Columns*.
-- Light theme redrawn in a mid-light blue-green instead of near-white.
-- Key figures can be shown under their Swedish names (Direktavkastning, Utdelningsandel …) with the EN/SV button; the rest of the interface stays in English.
+- The hosted demo counts page loads anonymously with GoatCounter, to see whether anyone finds it and from where. One request per load, no cookies, no third-party script; list names and stock symbols are never sent. A local install or a fork sends nothing, and neither does a browser with Do Not Track or Global Privacy Control on.
 
 ## 2026-11-23 – Treble history and coverage bars
 
 - **Treble history** on the stock page: when the stock became a treble (or was one before), worked out from the saved key figures, with the price change over the period. The table's treble marker says since when.
 - **Coverage bars** replace the "19/21" next to each score: a thin bar shows how much of the scorecard had data, and the tooltip names what is missing. Hidden at full coverage.
 - README: AI-assistance note, new screenshots and demo GIF.
+
+## 2026-11-19 – Fewer default columns, a softer light theme, Swedish names
+
+- Fixed: the treble filter froze the page (the table was handed a new array on every render).
+- Fewer default columns: price, 3M, YTD, the core scores and their change, P/E, dividend yield and payout. The rest are a tick away under *Columns*.
+- Light theme redrawn in a mid-light blue-green instead of near-white.
+- Key figures can be shown under their Swedish names (Direktavkastning, Utdelningsandel …) with the EN/SV button; the rest of the interface stays in English.
 
 ## 2026-11-18 – Core scorecards, trebles and a tidier stock page
 
